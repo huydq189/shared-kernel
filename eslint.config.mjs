@@ -13,6 +13,7 @@ export default [
       prettier: eslintPluginPrettier
     },
     rules: {
+      '@typescript-eslint/no-empty-interface': 'off',
       'prettier/prettier': [
         'warn',
         {
