@@ -1,34 +1,93 @@
-import globals from 'globals'
-import pluginJs from '@eslint/js'
-import tseslint from 'typescript-eslint'
-import eslintPluginPrettier from 'eslint-plugin-prettier'
+import n from 'eslint-plugin-n';
+import prettier from 'eslint-plugin-prettier';
+import tsParser from '@typescript-eslint/parser';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import js from '@eslint/js';
+import {FlatCompat} from '@eslint/eslintrc';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+  allConfig: js.configs.all,
+});
 
 export default [
-  { files: ['**/*.{js,mjs,cjs,ts}'] },
-  { languageOptions: { globals: globals.node } },
-  pluginJs.configs.recommended,
-  ...tseslint.configs.recommended,
+  ...compat.extends('eslint:recommended', 'plugin:n/recommended', 'prettier'),
   {
     plugins: {
-      prettier: eslintPluginPrettier
+      n,
+      prettier,
     },
+
     rules: {
-      '@typescript-eslint/no-empty-interface': 'off',
-      'prettier/prettier': [
+      'prettier/prettier': 'error',
+      'block-scoped-var': 'error',
+      eqeqeq: 'error',
+      'no-var': 'error',
+      'prefer-const': 'error',
+      'eol-last': 'error',
+      'prefer-arrow-callback': 'error',
+      'no-trailing-spaces': 'error',
+
+      quotes: [
         'warn',
+        'single',
         {
-          arrowParens: 'always',
-          semi: false,
-          trailingComma: 'none',
-          tabWidth: 2,
-          endOfLine: 'auto',
-          useTabs: false,
-          singleQuote: true,
-          printWidth: 120,
-          jsxSingleQuote: true
-        }
-      ]
+          avoidEscape: true,
+        },
+      ],
+
+      'no-restricted-properties': [
+        'error',
+        {
+          object: 'describe',
+          property: 'only',
+        },
+        {
+          object: 'it',
+          property: 'only',
+        },
+      ],
     },
-    ignores: ['**/node_modules/', '**/dist/']
-  }
-]
+  },
+  ...compat.extends('plugin:@typescript-eslint/recommended').map(config => ({
+    ...config,
+    files: ['**/*.ts', '**/*.tsx'],
+  })),
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+
+    languageOptions: {
+      parser: tsParser,
+      ecmaVersion: 2018,
+      sourceType: 'module',
+
+      parserOptions: {
+        project: './tsconfig.json',
+      },
+    },
+
+    rules: {
+      '@typescript-eslint/ban-ts-comment': 'warn',
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-use-before-define': 'off',
+      '@typescript-eslint/no-warning-comments': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/no-var-requires': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/ban-types': 'off',
+      '@typescript-eslint/camelcase': 'off',
+      'n/no-missing-import': 'off',
+      'n/no-empty-function': 'off',
+      'n/no-unsupported-features/es-syntax': 'off',
+      'n/no-missing-require': 'off',
+      'n/shebang': 'off',
+      'require-atomic-updates': 'off',
+    },
+  },
+];
