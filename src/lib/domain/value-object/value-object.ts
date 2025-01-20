@@ -1,4 +1,5 @@
 import {isEqual} from 'es-toolkit';
+import {IValueObject} from '../interfaces';
 import {BuiltIn, DomainPrimitive, ValueObjectProps} from '../types';
 
 export class ValueObjectUtils {
@@ -26,7 +27,7 @@ export class ValueObjectUtils {
   }
 }
 
-export abstract class ValueObject<T> {
+export abstract class ValueObject<T> implements IValueObject<T> {
   protected props: Readonly<ValueObjectProps<T>>;
 
   constructor(props: ValueObjectProps<T>) {
