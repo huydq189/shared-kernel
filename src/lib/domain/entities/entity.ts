@@ -1,5 +1,5 @@
 import {Id, TId} from '../../core';
-import {IEntity} from '../interfaces';
+import {IEntity} from './entity.interface';
 
 export abstract class Entity<T> implements IEntity<T> {
   public readonly id: TId<T>;
