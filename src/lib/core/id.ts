@@ -1,5 +1,5 @@
 import {v4 as uuidv4} from 'uuid';
-import {TId} from '../interfaces';
+import {TId} from './id.interface';
 
 /**
  * @description Represents a unique identifier for Entities or Aggregates, providing methods

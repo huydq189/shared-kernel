@@ -4,12 +4,10 @@ export abstract class Request {
   public readonly requestId: string;
   public readonly occurredOn: Date;
 
-  protected constructor();
-  protected constructor(
-    requestId: string = uuidv4(),
-    occurredOn: Date = new Date(),
-  ) {
+  constructor(requestId: string = uuidv4(), occurredOn: Date = new Date()) {
     this.requestId = requestId;
     this.occurredOn = occurredOn;
   }
+
+  public abstract getUniqueName(): string;
 }
