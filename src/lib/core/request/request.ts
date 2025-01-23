@@ -12,12 +12,4 @@ export abstract class Request {
     this.requestId = requestId;
     this.occurredOn = occurredOn;
   }
-
-  public abstract getUniqueName(): string;
-
-  public abstract fromPrimitives(
-    body: Record<string, string>,
-    id: string,
-    occurredOn: string,
-  ): Request;
 }
