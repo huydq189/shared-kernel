@@ -1,3 +1,3 @@
 export * from './id';
-export * from './id.interface';
-export * from './request';
+export * from './requests';
+export * from './results';

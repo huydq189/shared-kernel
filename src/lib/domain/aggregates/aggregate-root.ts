@@ -1,5 +1,5 @@
 import {pull} from 'es-toolkit';
-import {Id} from '../../core';
+import {Id} from '../../core/id';
 import {Entity} from '../entities';
 import {DomainEvent} from '../events/domain-event';
 import {IAggregateRoot} from './aggregate-root.interface';

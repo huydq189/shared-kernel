@@ -1,4 +1,4 @@
-import {BuiltIn, ValueObjectProps} from '../types';
+import {BuiltIn, ValueObjectProps} from './types';
 
 /**
  * @interface

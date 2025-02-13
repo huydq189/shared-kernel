@@ -1,6 +1,6 @@
 import {isEqual} from 'es-toolkit';
-import {IValueObject} from '../interfaces';
-import {BuiltIn, DomainPrimitive, ValueObjectProps} from '../types';
+import {BuiltIn, DomainPrimitive, ValueObjectProps} from './types';
+import {IValueObject} from './value-object.interface';
 
 export class ValueObjectUtils {
   public static compareBetween(
