@@ -1,4 +1,5 @@
-import {ValueObject, ValueObjectProps, ValueObjectUtils} from '..';
+import {ValueObjectProps} from './types';
+import {ValueObject, ValueObjectUtils} from './value-object';
 
 describe('value-object', () => {
   describe('compare', () => {
