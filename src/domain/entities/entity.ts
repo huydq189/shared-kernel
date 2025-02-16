@@ -1,10 +1,10 @@
 import {Id, TId} from '../../core';
 import {IEntity} from './entity.interface';
 
-export abstract class Entity<T> implements IEntity<T> {
+export abstract class Entity<T = string> implements IEntity<T> {
   public readonly id: TId<T>;
 
-  constructor(id?: Id<T>) {
+  protected constructor(id?: TId<T>) {
     this.id = id ? id : new Id();
   }
 

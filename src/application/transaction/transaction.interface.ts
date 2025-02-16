@@ -1,4 +1,4 @@
-export interface IModuleTransactionAsync {
+export interface IModuleTransactionAsync extends Disposable {
   /// <summary> . </summary>
   begin(): void;
 

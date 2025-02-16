@@ -1,16 +1,16 @@
 import {pull} from 'es-toolkit';
-import {Id} from '../../core/id';
+import {TId} from '../../core';
 import {Entity} from '../entities';
 import {DomainEvent} from '../events/domain-event';
 import {IAggregateRoot} from './aggregate-root.interface';
 
-export abstract class AggregateRoot<EntityProps>
-  extends Entity<EntityProps>
-  implements IAggregateRoot
+export abstract class AggregateRoot<T = string>
+  extends Entity<T>
+  implements IAggregateRoot<T>
 {
   #domainEvents: DomainEvent[] = [];
 
-  constructor(id: Id) {
+  constructor(id?: TId<T>) {
     super(id);
     this.#domainEvents = new Array<DomainEvent>();
   }
@@ -19,11 +19,11 @@ export abstract class AggregateRoot<EntityProps>
     return this.#domainEvents;
   }
 
-  record(domainEvent: DomainEvent): void {
+  public record(domainEvent: DomainEvent): void {
     this.domainEvents.push(domainEvent);
   }
 
-  pullDomainEvents(): DomainEvent[] {
+  public pullDomainEvents(): DomainEvent[] {
     this.domainEvents.forEach(e => e.setAggregateId(this.id.value()));
     const events = pull(this.domainEvents, this.domainEvents);
     return events;

@@ -1,8 +1,7 @@
-import {ResultT} from '../../core';
+import {Id, ResultT} from '../../core';
 
 export interface IUnitOfWork {
-  /** . */
-  id: string; // Guid is replaced with string for UUID in TypeScript
+  id: Id;
 
   /** . */
   saveChanges(): number;

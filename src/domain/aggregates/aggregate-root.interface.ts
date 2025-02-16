@@ -1,6 +1,7 @@
+import {TId} from '../../core';
 import {DomainEvent} from '../events';
 
-/// <summary> This root aggregate contains your domain identifier and events. </summary>
-export interface IAggregateRoot {
+export interface IAggregateRoot<T = string> {
+  id: TId<T>;
   pullDomainEvents(): DomainEvent[];
 }
