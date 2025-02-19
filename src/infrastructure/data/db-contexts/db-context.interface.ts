@@ -1,4 +1,4 @@
-import {IUnitOfWork} from '../../../application/unit-of-work/unit-of-work.interface';
+import {IUnitOfWork} from '../../../application';
 import {IAggregateRoot} from '../../../domain';
 
 export interface IDbContext extends IUnitOfWork {
@@ -8,7 +8,11 @@ export interface IDbContext extends IUnitOfWork {
   update<TAggregateRoot extends IAggregateRoot<TId>, TId = string>(
     aggregateRoot: TAggregateRoot,
   ): void;
-  delete<TAggregateRoot extends IAggregateRoot<TId>, TId = string>(
+  remove<TAggregateRoot extends IAggregateRoot<TId>, TId = string>(
     aggregateRoot: TAggregateRoot,
   ): void;
+
+  getById<TAggregateRoot extends IAggregateRoot<TId>, TId = string>(
+    id: TId,
+  ): TAggregateRoot | null;
 }

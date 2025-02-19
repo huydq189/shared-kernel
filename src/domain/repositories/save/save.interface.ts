@@ -1,11 +1,11 @@
-import {ResultT} from '../../../core';
+import {Result} from '../../../core';
 
 export interface ISaveRepository {
-  SaveChanges(): number;
+  saveChanges(): number;
 
-  SaveChangesResult(): ResultT<number>;
+  saveChangesResult(): Result<number>;
 
-  Rollback(): number;
+  rollback(): number;
 
-  RollbackResult(): ResultT<number>;
+  rollbackResult(): Result<number>;
 }

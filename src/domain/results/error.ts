@@ -1,21 +1,13 @@
 export class DomainError extends Error {
   /**
-   * The name of the property.
-   */
-  public propertyName?: string;
-
-  /**
-   * The error message.
-   */
-  public errorMessage: string;
-
-  /**
    * Protected constructor to prevent direct instantiation.
    */
   constructor(errorMessage: string, propertyName?: string) {
     super(errorMessage);
-    this.propertyName = propertyName;
-    this.errorMessage = errorMessage;
+    if (propertyName) {
+      this.name = propertyName;
+    }
+    this.message = errorMessage;
   }
 
   /**

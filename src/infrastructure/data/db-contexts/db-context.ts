@@ -29,11 +29,6 @@ export abstract class DbContext implements IDbContext {
     this.operations = [];
     this.operationsExecuted = [];
   }
-  delete<TAggregateRoot extends IAggregateRoot<TId>, TId = string>(
-    aggregateRoot: TAggregateRoot,
-  ): void {
-    throw new Error('Method not implemented.');
-  }
 
   public add<TAggregateRoot extends IAggregateRoot<TId>, TId>(
     aggregateRoot: TAggregateRoot,
@@ -60,18 +55,23 @@ export abstract class DbContext implements IDbContext {
   public remove<TAggregateRoot extends IAggregateRoot<TId>, TId>(
     aggregateRoot: TAggregateRoot,
   ): void {
-    this.operations.push({
-      crud: Crud.Deleting,
-      aggregateRoot,
-      commitMethod: () =>
-        isEntityAuditableLogicalRemove(aggregateRoot)
-          ? this.updateMethod(aggregateRoot)
-          : this.deleteMethod(aggregateRoot),
-      rollbackMethod: () =>
-        isEntityAuditableLogicalRemove(aggregateRoot)
-          ? this.updateMethod(this.getById(aggregateRoot.id)!)
-          : this.addMethod(this.getById(aggregateRoot.id)!),
-    });
+    this.operations.push(
+      isEntityAuditableLogicalRemove(aggregateRoot)
+        ? {
+            crud: Crud.Deleting,
+            aggregateRoot,
+            commitMethod: () => this.updateMethod(aggregateRoot),
+            rollbackMethod: () =>
+              this.updateMethod(this.getById(aggregateRoot.id)!),
+          }
+        : {
+            crud: Crud.Deleting,
+            aggregateRoot,
+            commitMethod: () => this.deleteMethod(aggregateRoot),
+            rollbackMethod: () =>
+              this.addMethod(this.getById(aggregateRoot.id)!),
+          },
+    );
   }
 
   public saveChanges(): number {
@@ -94,10 +94,10 @@ export abstract class DbContext implements IDbContext {
       addingAndUpdating.filter(x => isValidatableObject(x)),
     );
 
-    return Result.create(0)
+    return Result.create()
       .combine(x1, x2)
       .tap(() => this.audit(this.operations))
-      .tryBind(() => Result.create(this.commit()));
+      .tryBind(() => this.commit());
   }
 
   public rollback(): number {
@@ -117,7 +117,7 @@ export abstract class DbContext implements IDbContext {
   }
 
   public rollbackResult(): Result<number> {
-    return Result.create(this.rollback());
+    return Result.ok(this.rollback());
   }
 
   protected abstract addMethod<TAggregateRoot extends IAggregateRoot<TId>, TId>(
