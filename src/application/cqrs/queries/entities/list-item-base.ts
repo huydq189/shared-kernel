@@ -1,11 +1,9 @@
-namespace SharedKernel.Application.Cqrs.Queries.Entities;
+export class ListItemBase<T> {
+  public id: T;
+  public deleted: boolean;
 
-/// <summary> . </summary>
-public class ListItemBase<T> where T : notnull
-{
-    /// <summary> . </summary>
-    public T Id { get; set; } = default!;
-
-    /// <summary> . </summary>
-    public bool Deleted { get; set; }
+  constructor(id: T, deleted: boolean = false) {
+    this.id = id;
+    this.deleted = deleted;
+  }
 }

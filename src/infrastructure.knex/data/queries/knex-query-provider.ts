@@ -2,11 +2,11 @@ import {Knex} from 'knex';
 
 export class KnexQueryProvider {
   private readonly logger: any;
-  private readonly db: Knex;
+  private readonly dbConnection: Knex;
 
   constructor(logger: any, db: Knex) {
     this.logger = logger;
-    this.db = db;
+    this.dbConnection = db;
   }
 
   async executeQueryFirstOrDefault<T>(
@@ -14,14 +14,13 @@ export class KnexQueryProvider {
     parameters?: any,
   ): Promise<T | null> {
     this.logger.verbose(sql);
-    const result = await this.db.raw<T[]>(sql, parameters);
+    const result = await this.dbConnection.raw<T[]>(sql, parameters);
     return result.length > 0 ? result[0] : null;
   }
 
   async executeQuery<T>(sql: string, parameters?: any): Promise<T[]> {
     this.logger.verbose(sql);
-    const result = await this.db.raw<T[]>(sql, parameters);
-    return result.rows;
+    const result = await this.dbConnection.raw<T[]>(sql, parameters);
   }
 
   async toPagedList<T>(

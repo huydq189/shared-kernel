@@ -1,17 +1,18 @@
-namespace SharedKernel.Application.Cqrs.Queries.Entities;
+export class Results<T> {
+  public readonly draw: number;
+  public readonly recordsTotal: number;
+  public readonly recordsFiltered: number;
+  public readonly data: T[];
 
-/// <summary> . </summary>
-public class Results<T> where T : notnull
-{
-    /// <summary> . </summary>
-    public int Draw { get; set; }
-
-    /// <summary> . </summary>
-    public int RecordsTotal { get; set; }
-
-    /// <summary> . </summary>
-    public int RecordsFiltered { get; set; }
-
-    /// <summary> . </summary>
-    public List<T> Data { get; set; } = null!;
+  constructor(
+    draw: number,
+    recordsTotal: number,
+    recordsFiltered: number,
+    data: T[],
+  ) {
+    this.draw = draw;
+    this.recordsTotal = recordsTotal;
+    this.recordsFiltered = recordsFiltered;
+    this.data = data;
+  }
 }

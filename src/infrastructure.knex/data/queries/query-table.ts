@@ -1,43 +1,32 @@
-// namespace SharedKernel.Infrastructure.Dapper.Data.Queries;
+export type QueryTableProps = {
+  name: string;
+  key: string;
+  schema?: string;
+  alias?: string;
+};
 
-// /// <summary> </summary>
-// public class QueryTable
-// {
-//     /// <summary> </summary>
-//     public QueryTable(string name, string key, string schema = "dbo")
-//     {
-//         Schema = schema;
-//         Name = name;
-//         Key = key;
-//     }
+export class QueryTable {
+  public readonly schema: string;
+  public readonly name: string;
+  public readonly key: string;
+  public readonly alias?: string;
 
-//     /// <summary> </summary>
-//     public QueryTable(string name, string alias, string key, string schema = "dbo")
-//     {
-//         Schema = schema;
-//         Name = name;
-//         Key = key;
-//         Alias = alias;
-//     }
+  constructor({name, key, schema = 'dbo', alias}: QueryTableProps) {
+    this.schema = schema;
+    this.name = name;
+    this.key = key;
+    this.alias = alias;
+  }
 
-//     /// <summary> </summary>
-//     protected string Schema { get; }
+  public toString() {
+    return !this.alias
+      ? `${this.schema}.${this.name} AS ${this.alias}`
+      : `${this.schema}.${this.name}`;
+  }
 
-//     /// <summary> </summary>
-//     protected string Name { get; }
-
-//     /// <summary> </summary>
-//     private string Key { get; }
-
-//     /// <summary> </summary>
-//     private string Alias { get; } = null!;
-
-//     /// <summary> </summary>
-//     public override string ToString()
-//     {
-//         return !string.IsNullOrEmpty(Alias) ? $"{Schema}.{Name} AS {Alias}" : $"{Schema}.{Name}";
-//     }
-
-//     /// <summary> </summary>
-//     public string Join => !string.IsNullOrEmpty(Alias) ? $"{Alias}.{Key}" : $"{Schema}.{Name}.{Key}";
-// }
+  public get join(): string {
+    return this.alias
+      ? `${this.alias}.${this.key}`
+      : `${this.schema}.${this.name}.${this.key}`;
+  }
+}

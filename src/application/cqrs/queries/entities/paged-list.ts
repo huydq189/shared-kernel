@@ -1,32 +1,19 @@
-using SharedKernel.Application.Cqrs.Queries.Contracts;
+import {IPagedList} from './paged-list.interface';
 
-namespace SharedKernel.Application.Cqrs.Queries.Entities;
+export class PagedList<T> implements IPagedList<T> {
+  private static instance = new PagedList<any>(0, []);
+  public readonly totalRecords: number;
 
-/// <summary> A paged result. </summary>
-/// <typeparam name="T"></typeparam>
-public class PagedList<T> : IPagedList<T>
-{
-    private static PagedList<T> Instance => new(0, []);
+  public static empty<T>(): PagedList<T> {
+    return PagedList.instance;
+  }
 
-    /// <summary> . </summary>
-    public static PagedList<T> Empty() => Instance;
-
-    /// <summary> Constructor. </summary>
-    /// <param name="totalRecordsFiltered"></param>
-    /// <param name="items"></param>
-    public PagedList(int totalRecordsFiltered, IEnumerable<T> items)
-    {
-        TotalRecords = totalRecordsFiltered;
-        TotalRecordsFiltered = totalRecordsFiltered;
-        Items = items;
-    }
-
-    /// <summary> Total records before filtered. </summary>
-    public int TotalRecords { get; }
-
-    /// <summary> Total records after filtered. </summary>
-    public int TotalRecordsFiltered { get; }
-
-    /// <summary> Paged items. </summary>
-    public IEnumerable<T> Items { get; }
+  constructor(
+    public readonly totalRecordsFiltered: number,
+    public readonly items: T[],
+  ) {
+    this.totalRecords = totalRecordsFiltered;
+    this.totalRecordsFiltered = totalRecordsFiltered;
+    this.items = items;
+  }
 }

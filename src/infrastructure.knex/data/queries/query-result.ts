@@ -1,71 +1,55 @@
-// using Dapper;
-// using SharedKernel.Application.Cqrs.Queries.Contracts;
-// using SharedKernel.Application.Cqrs.Queries.Entities;
-// using SharedKernel.Infrastructure.Dapper.Data.ConnectionFactory;
+import { IDbConnectionFactory } from '../connection-factory';
+import { DynamicParameters, PageOptions, IPagedList, PagedList } from './types'; // Adjust the import paths as necessary
+import { QueryFirstOrDefaultAsync, QueryAsync } from './db-utils'; // Adjust the import paths as necessary
 
-// namespace SharedKernel.Infrastructure.Dapper.Data.Queries;
+export class QueryResult {
+  private readonly dbConnectionFactory: IDbConnectionFactory;
+  private readonly parameters: DynamicParameters;
+  private readonly countQuery: string;
+  private readonly pagedQuery: string;
 
-// /// <summary> </summary>
-// public class QueryResult
-// {
-//     private readonly IDbConnectionFactory _dbConnectionFactory;
+  constructor(parameters: DynamicParameters, query: string, tempTables: string, state: PageOptions, dbConnectionFactory: IDbConnectionFactory) {
+    this.dbConnectionFactory = dbConnectionFactory;
 
-//     /// <summary> </summary>
-//     public QueryResult(DynamicParameters parameters, string query, string tempTables, PageOptions state, IDbConnectionFactory dbConnectionFactory)
-//     {
-//         _dbConnectionFactory = dbConnectionFactory;
+    const parameterProperties = parameters.ParameterNames.map(p => "@" + p);
 
-//         var parameterProperties = parameters.ParameterNames
-//             .Select(p => "@" + p)
-//             .ToList();
+    const parametersNotFound = query
+      .replace(/\n|\r|\t/g, " ")
+      .replace(")", " )")
+      .split(' ')
+      .filter(word => word.startsWith("@"))
+      .filter(parameter => !parameterProperties.includes(parameter))
+      .map(parameter => `Parameter ${parameter} not found`);
 
-//         var parametersNotFound = query
-//             .Replace("\n", " ")
-//             .Replace("\r", " ")
-//             .Replace("\t", " ")
-//             .Replace(")", " )")
-//             .Split(' ')
-//             .Where(word => word.StartsWith("@"))
-//             .Where(parameter => !parameterProperties.Contains(parameter))
-//             .Select(parameter => $"Parameter {parameter} not found")
-//             .ToList();
+    if (parametersNotFound.length > 0) {
+      throw new Error(parametersNotFound.join(", "));
+    }
 
-//         if (parametersNotFound.Any())
-//             throw new Exception(string.Join(", ", parametersNotFound));
+    this.parameters = parameters;
+    this.countQuery = `${tempTables} SELECT COUNT(1) FROM (${query}) ALIAS`;
+    this.pagedQuery = `${tempTables} ${query}`;
 
-//         Parameters = parameters;
+    if (state.Orders && state.Orders.length > 0) {
+      this.pagedQuery += `\nORDER BY ${state.Orders.map(order => `${order.Field} ${order.Ascending ? '' : 'DESC'}`).join(", ")}`;
+    }
 
-//         CountQuery = $"{tempTables} SELECT COUNT(1) FROM ({query}) ALIAS";
+    if (state.Take !== undefined) {
+      this.pagedQuery += `\nOFFSET ${state.Skip ?? 0} ROWS\nFETCH NEXT ${state.Take} ROWS ONLY`;
+    }
+  }
 
-//         PagedQuery = $"{tempTables} {query}";
+  public async toPagedListAsync<TResult>(cancellationToken: AbortSignal): Promise<IPagedList<TResult>> {
+    const connection = await this.dbConnectionFactory.getConnection();
+    await connection.openAsync(cancellationToken);
 
-//         if (state.Orders != default! && state.Orders.Any())
-//             PagedQuery += $"{Environment.NewLine} ORDER BY {string.Join(", ", state.Orders.Select(order => $"{order.Field} {(!order.Ascending.HasValue || order.Ascending.Value ? string.Empty : "DESC")}"))}";
+    const total = await QueryFirstOrDefaultAsync<number>(connection, this.countQuery, this.parameters);
 
-//         if (state.Take.HasValue)
-//             PagedQuery += $"{Environment.NewLine} OFFSET {state.Skip ?? 0} ROWS\nFETCH NEXT {state.Take} ROWS ONLY";
-//     }
+    if (total === 0) {
+      return PagedList.empty<TResult>();
+    }
 
-//     private DynamicParameters Parameters { get; }
+    const elements = await QueryAsync<TResult>(connection, this.pagedQuery, this.parameters);
 
-//     private string CountQuery { get; }
-
-//     private string PagedQuery { get; }
-
-//     /// <summary> </summary>
-//     public async Task<IPagedList<TResult>> ToPagedListAsync<TResult>(CancellationToken cancellationToken)
-//     {
-//         using var connection = _dbConnectionFactory.GetConnection();
-
-//         await connection.OpenAsync(cancellationToken);
-
-//         var total = await connection.QueryFirstOrDefaultAsync<int>(CountQuery, Parameters);
-
-//         if (total == default)
-//             return PagedList<TResult>.Empty();
-
-//         var elements = await connection.QueryAsync<TResult>(PagedQuery, Parameters);
-
-//         return new PagedList<TResult>(total, elements);
-//     }
-// }
+    return new PagedList<TResult>(total, elements);
+  }
+}

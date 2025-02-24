@@ -1,59 +1,37 @@
-namespace SharedKernel.Application.Cqrs.Queries.Entities;
+export enum FilterOperator {
+  EqualTo = 1,
 
-/// <summary> The filter operator (comparison). </summary>
-public enum FilterOperator
-{
-    /// <summary> . </summary>
-    EqualTo = 1,
+  NotEqualTo = 2,
 
-    /// <summary> . </summary>
-    NotEqualTo = 2,
+  IsEqualToNull = 3,
 
-    /// <summary> . </summary>
-    IsEqualToNull = 3,
+  IsNotEqualToNull = 4,
 
-    /// <summary> . </summary>
-    IsNotEqualToNull = 4,
+  LessThan = 5,
 
-    /// <summary> . </summary>
-    LessThan = 5,
+  LessThanOrEqualTo = 6,
 
-    /// <summary> . </summary>
-    LessThanOrEqualTo = 6,
+  GreaterThan = 7,
 
-    /// <summary> . </summary>
-    GreaterThan = 7,
+  GreaterThanOrEqualTo = 8,
 
-    /// <summary> . </summary>
-    GreaterThanOrEqualTo = 8,
+  StartsWith = 9,
 
-    /// <summary> . </summary>
-    StartsWith = 9,
+  NotStartsWith = 10,
 
-    /// <summary> . </summary>
-    NotStartsWith = 10,
+  EndsWith = 11,
 
-    /// <summary> . </summary>
-    EndsWith = 11,
+  NotEndsWith = 12,
 
-    /// <summary> . </summary>
-    NotEndsWith = 12,
+  Contains = 13,
 
-    /// <summary> . </summary>
-    Contains = 13,
+  NotContains = 14,
 
-    /// <summary> . </summary>
-    NotContains = 14,
+  IsEmpty = 15,
 
-    /// <summary> . </summary>
-    IsEmpty = 15,
+  IsNotEmpty = 16,
 
-    /// <summary> . </summary>
-    IsNotEmpty = 16,
+  DateEqual = 17,
 
-    /// <summary> . </summary>
-    DateEqual = 17,
-
-    /// <summary> . </summary>
-    NotDateEqual = 18,
+  NotDateEqual = 18,
 }

@@ -1,4 +1,5 @@
 import {Knex} from 'knex';
-export interface IDbConnectionFactory<DbConnection = Knex> {
-  getConnection(): DbConnection;
+
+export interface IDbConnectionFactory {
+  getConnection(): Knex;
 }
