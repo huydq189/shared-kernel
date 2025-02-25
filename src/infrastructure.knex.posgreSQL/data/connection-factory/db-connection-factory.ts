@@ -1,5 +1,5 @@
 import {Knex, knex} from 'knex';
-import {IDbConnectionFactory} from '../../../../../infrastructure.knex/data';
+import {IDbConnectionFactory} from '../../../infrastructure.knex/data';
 
 export class PostgreSqlConnectionFactory implements IDbConnectionFactory {
   private static instance: Knex | null = null;

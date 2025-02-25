@@ -1,70 +1,69 @@
-import {Knex} from 'knex';
+import {PagedList, PageOptions} from '../../../application';
+import {IDbConnectionFactory} from '../connection-factory';
 
 export class KnexQueryProvider {
-  private readonly logger: any;
-  private readonly dbConnection: Knex;
+  readonly #dbConnectionFactory: IDbConnectionFactory;
 
-  constructor(logger: any, db: Knex) {
-    this.logger = logger;
-    this.dbConnection = db;
+  constructor(dbConnectionFactory: IDbConnectionFactory) {
+    this.#dbConnectionFactory = dbConnectionFactory;
   }
 
-  async executeQueryFirstOrDefault<T>(
+  async executeQueryFirst(sql: string, parameters: Record<string, any> = {}) {
+    const result = await this.executeQuery(sql, parameters);
+    return result[0];
+  }
+
+  async executeQuery<T>(
     sql: string,
-    parameters?: any,
-  ): Promise<T | null> {
-    this.logger.verbose(sql);
-    const result = await this.dbConnection.raw<T[]>(sql, parameters);
-    return result.length > 0 ? result[0] : null;
-  }
-
-  async executeQuery<T>(sql: string, parameters?: any): Promise<T[]> {
-    this.logger.verbose(sql);
-    const result = await this.dbConnection.raw<T[]>(sql, parameters);
+    parameters: Record<string, any> = {},
+  ): Promise<T[]> {
+    const client = this.#dbConnectionFactory.getConnection();
+    return (await client.raw<T>(sql, parameters)) as Promise<T[]>;
   }
 
   async toPagedList<T>(
     sql: string,
-    parameters: any,
-    pageOptions: any,
-    preselect?: string,
-  ): Promise<any> {
-    let pre = preselect ? `${preselect} \n` : '';
+    parameters: Record<string, any>,
+    pageOptions: PageOptions,
+    preselect: string = '',
+  ): Promise<PagedList<T>> {
+    let pre = '';
+    if (preselect.trim()) {
+      pre = `${preselect} \n`;
+    }
 
-    const queryCountString = `${pre}SELECT COUNT(1) FROM (${sql}) AS ALIAS`;
-    this.logger.verbose(queryCountString);
-    const total =
-      (await this.db.raw<{count: number}[]>(queryCountString, parameters))
-        .rows[0]?.count || 0;
+    const client = this.#dbConnectionFactory.getConnection();
+    const queryCountString = `${preselect}SELECT COUNT(1) FROM (${sql}) ALIAS`;
+    const result = await client.raw<number[]>(queryCountString, parameters);
+    const total = result[0];
 
-    if (total === 0) return PagedList.empty<T>();
+    if (total) return PagedList.empty<T>();
 
-    let queryString = `${preselect || ''}${sql}`;
-    if (pageOptions.orders?.length) {
-      const orders = pageOptions.orders
+    let paginatedQuery = `${preselect}${sql}`;
+    if (pageOptions.orders && pageOptions.orders.length > 0) {
+      const orderBy = pageOptions.orders
         .map(order => `${order.field} ${order.ascending ? '' : 'DESC'}`)
         .join(', ');
-      queryString += `\nORDER BY ${orders}`;
+      paginatedQuery += ` ORDER BY ${orderBy}`;
     }
 
     if (pageOptions.take) {
-      queryString += `\nOFFSET ${pageOptions.skip} ROWS FETCH NEXT ${pageOptions.take} ROWS ONLY`;
+      paginatedQuery += ` OFFSET ${pageOptions.skip} ROWS FETCH NEXT ${pageOptions.take} ROWS ONLY`;
     }
 
-    this.logger.verbose(queryString);
-    const elements = await this.db.raw<T[]>(queryString, parameters);
-    return new PagedList<T>(total, elements.rows);
+    const elementsResult = await client.raw<T[]>(paginatedQuery, parameters);
+    return new PagedList<T>(total, elementsResult[0] || []);
   }
 
-  async executeStoredProcedure<T>(
+  async executeSpMultiple<T>(
     storedProcedure: string,
-    parameters?: any,
+    parameters: Record<string, any> = {},
   ): Promise<T[]> {
-    this.logger.verbose(`Executing stored procedure: ${storedProcedure}`);
-    const result = await this.db.raw<T[]>(
-      `CALL ${storedProcedure}`,
+    const client = this.#dbConnectionFactory.getConnection();
+    const result = await client.raw<T[]>(
+      `CALL ${storedProcedure}(:...parameters)`,
       parameters,
     );
-    return result.rows;
+    return result[0] || [];
   }
 }

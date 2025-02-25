@@ -1,11 +1,10 @@
-namespace SharedKernel.Application.Cqrs.Queries.Entities;
+export class ComboDto<TId> {
+  value: TId;
 
-/// <summary> Combo item. </summary>
-public class ComboDto<TId> where TId : notnull
-{
-    /// <summary> Combo value. </summary>
-    public TId Value { get; set; } = default!;
+  text: string;
 
-    /// <summary> Combo text. </summary>
-    public string Text { get; set; } = null!;
+  constructor(value: TId, text: string) {
+    this.value = value;
+    this.text = text;
+  }
 }
