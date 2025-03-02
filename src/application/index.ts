@@ -1,3 +1,4 @@
+export * from './core';
 export * from './cqrs';
 export * from './transaction';
 export * from './unit-of-work';

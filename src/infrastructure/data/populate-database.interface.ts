@@ -4,5 +4,5 @@ export interface IPopulateDatabase {
    * Populates the database with necessary data, potentially with migrations.
    * @param cancellationToken An AbortSignal that allows cancellation of the operation.
    */
-  populate(cancellationToken: AbortSignal): Promise<void>;
+  populate(): Promise<void>;
 }

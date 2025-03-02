@@ -1,69 +1,113 @@
-import {PagedList, PageOptions} from '../../../application';
-import {IDbConnectionFactory} from '../connection-factory';
+import {DbContext} from '../../../infrastructure';
 
-export class KnexQueryProvider {
-  readonly #dbConnectionFactory: IDbConnectionFactory;
+export class KnexQueryProvider<TDbContextBase extends DbContext> {
+  private _factory: IDbContextFactory<TDbContextBase>;
+  private _lastDbContext!: TDbContextBase;
+  private _dbContexts: TDbContextBase[];
 
-  constructor(dbConnectionFactory: IDbConnectionFactory) {
-    this.#dbConnectionFactory = dbConnectionFactory;
+  constructor(factory: IDbContextFactory<TDbContextBase>) {
+    this._factory = factory;
+    this._dbContexts = [];
   }
 
-  async executeQueryFirst(sql: string, parameters: Record<string, any> = {}) {
-    const result = await this.executeQuery(sql, parameters);
-    return result[0];
+  public getQuery<TEntity>(showDeleted = false): IQueryable<TEntity> {
+    this._lastDbContext = this.getDbContext();
+    return this.set<TEntity>(showDeleted);
   }
 
-  async executeQuery<T>(
-    sql: string,
-    parameters: Record<string, any> = {},
-  ): Promise<T[]> {
-    const client = this.#dbConnectionFactory.getConnection();
-    return (await client.raw<T>(sql, parameters)) as Promise<T[]>;
+  public set<TEntity>(showDeleted = false): IQueryable<TEntity> {
+    if (!this._lastDbContext) {
+      throw new Error("It is required to call the 'GetQuery' method before");
+    }
+
+    return this._lastDbContext
+      .set<TEntity>()
+      .asNoTracking()
+      .where(showDeleted, false);
   }
 
-  async toPagedList<T>(
-    sql: string,
-    parameters: Record<string, any>,
+  private getDbContext(): TDbContextBase {
+    const dbContext = this._factory.createDbContext();
+    this._dbContexts.push(dbContext);
+    return dbContext;
+  }
+
+  public async toPagedListAsync<T, TResult>(
     pageOptions: PageOptions,
-    preselect: string = '',
-  ): Promise<PagedList<T>> {
-    let pre = '';
-    if (preselect.trim()) {
-      pre = `${preselect} \n`;
+    domainSpecification?: ISpecification<T>,
+    dtoSpecification?: ISpecification<TResult>,
+    selector?: Expression<Func<T, TResult>>,
+    cancellationToken: CancellationToken = new CancellationToken(),
+  ): Promise<PagedList<TResult>> {
+    const dbContext =
+      await this._factory.createDbContextAsync(cancellationToken);
+    this._dbContexts.push(dbContext);
+
+    let query = dbContext.set<T>().asNoTracking();
+
+    if (
+      pageOptions.showDeleted &&
+      !pageOptions.showDeleted &&
+      (typeof (T as any).prototype) instanceof IEntityAuditableLogicalRemove
+    ) {
+      query = query
+        .cast<IEntityAuditableLogicalRemove>()
+        .where(
+          new NotDeletedSpecification<IEntityAuditableLogicalRemove>().satisfiedBy(),
+        )
+        .cast<T>();
+    }
+    if (
+      pageOptions.showDeleted &&
+      pageOptions.showOnlyDeleted &&
+      pageOptions.showDeleted &&
+      pageOptions.showOnlyDeleted &&
+      (typeof (T as any).prototype) instanceof IEntityAuditableLogicalRemove
+    ) {
+      query = query
+        .cast<IEntityAuditableLogicalRemove>()
+        .where(
+          new DeletedSpecification<IEntityAuditableLogicalRemove>().satisfiedBy(),
+        )
+        .cast<T>();
+    }
+    if (domainSpecification) {
+      query = query.where(domainSpecification.satisfiedBy());
     }
 
-    const client = this.#dbConnectionFactory.getConnection();
-    const queryCountString = `${preselect}SELECT COUNT(1) FROM (${sql}) ALIAS`;
-    const result = await client.raw<number[]>(queryCountString, parameters);
-    const total = result[0];
+    let queryDto = selector
+      ? query.select(selector)
+      : query.projectTo<TResult>();
 
-    if (total) return PagedList.empty<T>();
+    if (pageOptions.filterProperties) {
+      const propertiesSpec =
+        new PropertiesContainsOrEqualSpecification<TResult>(
+          pageOptions.filterProperties.map(
+            p => new Property(p.field, p.value, undefined, true),
+          ),
+        );
 
-    let paginatedQuery = `${preselect}${sql}`;
-    if (pageOptions.orders && pageOptions.orders.length > 0) {
-      const orderBy = pageOptions.orders
-        .map(order => `${order.field} ${order.ascending ? '' : 'DESC'}`)
-        .join(', ');
-      paginatedQuery += ` ORDER BY ${orderBy}`;
+      queryDto = queryDto.where(propertiesSpec.satisfiedBy());
     }
 
-    if (pageOptions.take) {
-      paginatedQuery += ` OFFSET ${pageOptions.skip} ROWS FETCH NEXT ${pageOptions.take} ROWS ONLY`;
+    if (pageOptions.searchText && pageOptions.searchText.trim()) {
+      const searchTextSpec = new ObjectContainsOrEqualSpecification<TResult>(
+        pageOptions.searchText,
+      );
+
+      queryDto = queryDto.where(searchTextSpec.satisfiedBy());
     }
 
-    const elementsResult = await client.raw<T[]>(paginatedQuery, parameters);
-    return new PagedList<T>(total, elementsResult[0] || []);
-  }
+    if (dtoSpecification) {
+      queryDto = queryDto.where(dtoSpecification.satisfiedBy());
+    }
 
-  async executeSpMultiple<T>(
-    storedProcedure: string,
-    parameters: Record<string, any> = {},
-  ): Promise<T[]> {
-    const client = this.#dbConnectionFactory.getConnection();
-    const result = await client.raw<T[]>(
-      `CALL ${storedProcedure}(:...parameters)`,
-      parameters,
-    );
-    return result[0] || [];
+    const totalAfter = await queryDto.countAsync(cancellationToken);
+
+    const elements = await queryDto
+      .orderAndPaged(pageOptions)
+      .toListAsync(cancellationToken);
+
+    return new PagedList<TResult>(totalAfter, elements);
   }
 }

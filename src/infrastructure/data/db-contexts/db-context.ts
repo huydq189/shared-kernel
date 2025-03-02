@@ -1,11 +1,11 @@
 import {cloneDeep} from 'es-toolkit';
-import {IClassValidatorService} from '../../../application';
-import {Id, Result} from '../../../core';
+import {IClassValidatorService, Id} from '../../../application';
 import {
   IAggregateRoot,
   isEntityAuditable,
   isEntityAuditableLogicalRemove,
   isValidatableObject,
+  Result,
 } from '../../../domain';
 import {IEntityAuditableService} from '../services';
 import {Crud} from './crud';

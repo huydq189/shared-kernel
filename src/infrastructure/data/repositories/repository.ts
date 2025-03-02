@@ -1,5 +1,9 @@
-import {Result} from '../../../core';
-import {IAggregateRoot, IRepository, ISaveRepository} from '../../../domain';
+import {
+  IAggregateRoot,
+  IRepository,
+  ISaveRepository,
+  Result,
+} from '../../../domain';
 import {IDbContext} from '../db-contexts';
 
 export abstract class Repository<
@@ -8,17 +12,17 @@ export abstract class Repository<
   >
   implements IRepository<TAggregateRoot, TId>, ISaveRepository
 {
-  private readonly _dbContext: IDbContext;
+  readonly #dbContext: IDbContext;
 
   protected constructor(dbContext: IDbContext) {
     if (!dbContext) {
       throw new Error('ArgumentNull: dbContext is required');
     }
-    this._dbContext = dbContext;
+    this.#dbContext = dbContext;
   }
 
   public add(aggregateRoot: TAggregateRoot): void {
-    this._dbContext.add<TAggregateRoot, TId>(aggregateRoot);
+    this.#dbContext.add<TAggregateRoot, TId>(aggregateRoot);
   }
 
   public addRange(aggregates: TAggregateRoot[]): void {
@@ -26,7 +30,7 @@ export abstract class Repository<
   }
 
   public getById(id: TId): TAggregateRoot | null {
-    return this._dbContext.getById(id);
+    return this.#dbContext.getById(id);
   }
 
   public any(id: TId): boolean {
@@ -38,7 +42,7 @@ export abstract class Repository<
   }
 
   public update(aggregateRoot: TAggregateRoot): void {
-    this._dbContext.update<TAggregateRoot, TId>(aggregateRoot);
+    this.#dbContext.update<TAggregateRoot, TId>(aggregateRoot);
   }
 
   public updateRange(aggregates: TAggregateRoot[]): void {
@@ -46,7 +50,7 @@ export abstract class Repository<
   }
 
   public remove(aggregateRoot: TAggregateRoot): void {
-    this._dbContext.remove(aggregateRoot);
+    this.#dbContext.remove(aggregateRoot);
   }
 
   public removeRange(aggregates: TAggregateRoot[]): void {
@@ -54,18 +58,18 @@ export abstract class Repository<
   }
 
   public saveChanges(): number {
-    return this._dbContext.saveChanges();
+    return this.#dbContext.saveChanges();
   }
 
   public saveChangesResult(): Result<number> {
-    return this._dbContext.saveChangesResult();
+    return this.#dbContext.saveChangesResult();
   }
 
   public rollback(): number {
-    return this._dbContext.rollback();
+    return this.#dbContext.rollback();
   }
 
   public rollbackResult(): Result<number> {
-    return this._dbContext.rollbackResult();
+    return this.#dbContext.rollbackResult();
   }
 }
