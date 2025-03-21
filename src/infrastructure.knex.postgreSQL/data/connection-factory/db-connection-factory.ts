@@ -1,11 +1,18 @@
 import {Knex, knex} from 'knex';
+import {KnexDbContext} from '../../../infrastructure.knex/data/db-contexts/knex-db-context';
+import {IDbConnectionFactory} from '../../../infrastructure/data';
 
-export class PostgreSqlConnectionFactory implements IDbConnectionFactory {
+export class PostgreSqlConnectionFactory
+  implements IDbConnectionFactory<KnexDbContext>
+{
   private static instance: Knex | null = null;
   private connectionString: string;
 
   constructor(connectionString: string) {
     this.connectionString = connectionString;
+  }
+  createDbContext(): KnexDbContext {
+    throw new Error('Method not implemented.');
   }
 
   getConnection(): Knex {

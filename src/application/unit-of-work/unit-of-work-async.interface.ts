@@ -1,20 +1,16 @@
-import {ResultT} from '../../core';
+import {Result} from '../../domain';
 import {IUnitOfWork} from './unit-of-work.interface';
 
 export interface IUnitOfWorkAsync extends IUnitOfWork {
   /** . */
-  saveChangesAsync(cancellationToken?: AbortSignal): Promise<number>;
+  saveChangesAsync(): Promise<number>;
 
   /** . */
-  saveChangesResultAsync(
-    cancellationToken?: AbortSignal,
-  ): Promise<ResultT<number>>;
+  saveChangesResultAsync(): Promise<Result<number>>;
 
   /** . */
-  rollbackAsync(cancellationToken?: AbortSignal): Promise<number>;
+  rollbackAsync(): Promise<number>;
 
   /** . */
-  rollbackResultAsync(
-    cancellationToken?: AbortSignal,
-  ): Promise<ResultT<number>>;
+  rollbackResultAsync(): Promise<Result<number>>;
 }

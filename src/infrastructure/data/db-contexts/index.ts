@@ -1,6 +1,7 @@
 export * from './crud';
 export * from './db-context';
 export * from './db-context-async.interface';
+export * from './db-context-factory.interface';
 export * from './db-context.interface';
 export * from './operation';
 export * from './operation-async';

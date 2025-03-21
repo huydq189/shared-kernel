@@ -1,4 +1,5 @@
-import {Id, ResultT} from '../../core';
+import {Result} from '../../domain';
+import {Id} from '../core';
 
 export interface IUnitOfWork {
   id: Id;
@@ -7,11 +8,11 @@ export interface IUnitOfWork {
   saveChanges(): number;
 
   /** . */
-  saveChangesResult(): ResultT<number>;
+  saveChangesResult(): Result<number>;
 
   /** . */
   rollback(): number;
 
   /** . */
-  rollbackResult(): ResultT<number>;
+  rollbackResult(): Result<number>;
 }

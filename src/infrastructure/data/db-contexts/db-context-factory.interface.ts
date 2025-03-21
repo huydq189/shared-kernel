@@ -1,4 +1,4 @@
-import {DbContext} from '../../../infrastructure/data';
+import {DbContext} from '..';
 
 export interface IDbConnectionFactory<TContext extends DbContext> {
   createDbContext(): TContext;
